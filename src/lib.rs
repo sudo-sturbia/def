@@ -85,6 +85,22 @@ impl Describer {
             }
         }
     }
+
+    // Add a description to the descriptions map.
+    pub fn add_description(&mut self, path: &str, desc: &str) {
+        self.descriptions.insert(path.to_string(), desc.to_string());
+    }
+
+    // Add a pattern to the patterns map.
+    pub fn add_pattern(&mut self, path: &str, desc: &str) {
+        self.patterns.insert(path.to_string(), desc.to_string());
+    }
+
+    // Return a string JSON representation of this Describer. This is
+    // subsequently written to a file to be re-loaded on next run.
+    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
 }
 
 #[cfg(test)]
@@ -137,6 +153,23 @@ mod tests {
             Ok(d) => describe_tester(&d),
             Err(e) => panic!(e),
         };
+    }
+
+    #[test]
+    fn add_test() {
+        let mut d = Describer::new();
+        d.add_description("path/to/directory", "This is an empty directory.");
+        d.add_pattern("parent/directory", "* is a child of parent/directory.");
+        assert_eq!(
+            d.to_json().unwrap(),
+            format!(
+                "{}{}{}{}",
+                "{\"descriptions\":",
+                "{\"path/to/directory\":\"This is an empty directory.\"},",
+                "\"patterns\":",
+                "{\"parent/directory\":\"* is a child of parent/directory.\"}}"
+            )
+        );
     }
 
     fn describe_tester(describer: &Describer) {
