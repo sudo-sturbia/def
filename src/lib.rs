@@ -79,3 +79,81 @@ impl Describer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_describe_test() {
+        let mut descriptions: HashMap<String, String> = HashMap::new();
+        let mut patterns: HashMap<String, String> = HashMap::new();
+        for (path, desc, is_pattern) in [
+            ("/path/to/dir", "This is /path/to/dir.", false),
+            ("/another/dir", "This is /another/dir.", false),
+            ("/yet/another/path", "This is /yet/another/path.", false),
+            ("/path/to/dir", "* is in /path/to/dir.", true),
+            ("/yet/another/path", "* is in /yet/another/path.", true),
+            ("/obvious", "* is *", true),
+            ("/yet/another", "* is in /yet/another/path.", true),
+        ]
+        .iter()
+        {
+            if *is_pattern {
+                patterns.insert(path.to_string(), desc.to_string());
+            } else {
+                descriptions.insert(path.to_string(), desc.to_string());
+            }
+        }
+
+        describe_tester(&Describer::new(descriptions, patterns));
+    }
+
+    #[test]
+    fn new_from_json_describe_test() {
+        match Describer::new_from_json(
+            "
+	    {
+                \"descriptions\": {
+                        \"/path/to/dir\": \"This is /path/to/dir.\",
+                        \"/another/dir\": \"This is /another/dir.\",
+                        \"/yet/another/path\": \"This is /yet/another/path.\"
+		},
+                \"patterns\": {
+                        \"/path/to/dir\": \"* is in /path/to/dir.\",
+                        \"/yet/another/path\": \"* is in /yet/another/path.\",
+                        \"/obvious\": \"* is *\",
+                        \"/yet/another\": \"* is in /yet/another/path.\"
+                }
+            }",
+        ) {
+            Ok(d) => describe_tester(&d),
+            Err(e) => panic!(e),
+        };
+    }
+
+    fn describe_tester(describer: &Describer) {
+        for (path, desc, is_none) in [
+            ("/path/to/dir", "This is /path/to/dir.", false),
+            ("/another/dir", "This is /another/dir.", false),
+            ("/yet/another/path", "This is /yet/another/path.", false),
+            ("/path/to/dir/1", "1 is in /path/to/dir.", false),
+            ("/path/to/dir/things", "things is in /path/to/dir.", false),
+            ("/yet/another/path/1", "1 is in /yet/another/path.", false),
+            ("/yet/another/path/$", "$ is in /yet/another/path.", false),
+            ("/obvious/obviously", "obviously is obviously", false),
+            ("/doesn't/exist", "", true),
+        ]
+        .iter()
+        {
+            assert_eq!(
+                describer.describe(path),
+                if *is_none {
+                    None
+                } else {
+                    Some(desc.to_string())
+                }
+            );
+        }
+    }
+}
