@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
-use serde_json::error;
+use serde::{Deserialize, Serialize};
 
 /// Directory seperator. Used to split a string.
 const SEPERATOR: char = '/';
@@ -24,20 +23,28 @@ const DIRECTORY_PLACEHOLDER: char = '*';
 ///
 /// ```
 /// ```
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Describer {
     descriptions: HashMap<String, String>,
     patterns: HashMap<String, String>,
 }
 
 impl Describer {
+    /// Create and return a new empty describer.
+    pub fn new() -> Describer {
+        Describer {
+            descriptions: HashMap::new(),
+            patterns: HashMap::new(),
+        }
+    }
+
     /// Create and return a new describer using given HashMaps.
     ///
     /// # Arguments
     ///
     /// * `d` - A map of directory descriptions.
     /// * `p` - A map of patterns.
-    pub fn new(d: HashMap<String, String>, p: HashMap<String, String>) -> Describer {
+    pub fn new_with(d: HashMap<String, String>, p: HashMap<String, String>) -> Describer {
         Describer {
             descriptions: d,
             patterns: p,
@@ -51,7 +58,7 @@ impl Describer {
     /// * `json` - A string representing a JSON value that can be deserialized
     /// into a Describer. An error is returned if the JSON string can't be
     /// deserialized.
-    pub fn new_from_json(json: &str) -> Result<Describer, error::Error> {
+    pub fn new_from_json(json: &str) -> Result<Describer, serde_json::Error> {
         serde_json::from_str::<Describer>(json)
     }
 
@@ -106,7 +113,7 @@ mod tests {
             }
         }
 
-        describe_tester(&Describer::new(descriptions, patterns));
+        describe_tester(&Describer::new_with(descriptions, patterns));
     }
 
     #[test]
