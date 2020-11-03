@@ -15,6 +15,7 @@ const HELP_FLAG: &str = "-help";
 ///
 /// If new functionality is added to the command (such as a new flag), then
 /// a new enum defining it should be added here.
+#[derive(Debug, PartialEq)]
 pub enum InvokedTo {
     Help,
     DescribeWorkingDir,
@@ -28,7 +29,7 @@ pub enum InvokedTo {
 /// describing what the command should achieve (print a help message,
 /// print description of dir, add description, etc.), and a list of
 /// arguments needed to do it.
-pub fn parse(args: Vec<String>) -> InvokedTo {
+pub fn parse(args: &Vec<String>) -> InvokedTo {
     match args.len() {
         1 => InvokedTo::DescribeWorkingDir,
         2 => match args[1].as_str() {
@@ -41,5 +42,76 @@ pub fn parse(args: Vec<String>) -> InvokedTo {
             _ => InvokedTo::Unknown,
         },
         _ => InvokedTo::Unknown,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_test() {
+        for (args, res) in [
+            (vec!["ddir".to_string()], InvokedTo::DescribeWorkingDir),
+            (vec!["./renamed".to_string()], InvokedTo::DescribeWorkingDir),
+            (
+                vec!["ddir".to_string(), "-help".to_string()],
+                InvokedTo::Help,
+            ),
+            (
+                vec!["ddir".to_string(), "/path/to/dir".to_string()],
+                InvokedTo::DescribeDirAtPath("/path/to/dir".to_string()),
+            ),
+            (
+                vec![
+                    "ddir".to_string(),
+                    "-add".to_string(),
+                    "/path".to_string(),
+                    "description".to_string(),
+                ],
+                InvokedTo::AddDescription("/path".to_string(), "description".to_string()),
+            ),
+            (
+                vec![
+                    "ddir".to_string(),
+                    "-pattern".to_string(),
+                    "/path".to_string(),
+                    "description".to_string(),
+                ],
+                InvokedTo::AddPattern("/path".to_string(), "description".to_string()),
+            ),
+            (vec![], InvokedTo::Unknown),
+            (
+                vec![
+                    "ddir".to_string(),
+                    "path".to_string(),
+                    "another".to_string(),
+                ],
+                InvokedTo::Unknown,
+            ),
+            (
+                vec![
+                    "ddir".to_string(),
+                    "-add".to_string(),
+                    "path".to_string(),
+                    "another".to_string(),
+                    "another".to_string(),
+                ],
+                InvokedTo::Unknown,
+            ),
+            (
+                vec![
+                    "ddir".to_string(),
+                    "-unkown".to_string(),
+                    "path".to_string(),
+                    "description".to_string(),
+                ],
+                InvokedTo::Unknown,
+            ),
+        ]
+        .iter()
+        {
+            assert_eq!(parse(args), *res)
+        }
     }
 }
