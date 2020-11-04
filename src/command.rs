@@ -3,6 +3,9 @@ const ADD_FLAG: &str = "-add";
 const PATTERN_FLAG: &str = "-pattern";
 const HELP_FLAG: &str = "-help";
 
+/// Result of command line parsing.
+type Result = std::result::Result<Config, ConfigError>;
+
 /// InvokedTo defines different things the `ddir` command can do, such as:
 /// print a help message, describe current working directory, etc. Only
 /// one of these things can be done at a time depending on how the command
@@ -16,12 +19,27 @@ const HELP_FLAG: &str = "-help";
 /// If new functionality is added to the command (such as a new flag), then
 /// a new enum defining it should be added here.
 #[derive(Debug, PartialEq)]
-pub enum InvokedTo {
+enum InvokedTo {
     Help,
     DescribeDirAtPath(String),
     AddDescription(String, String),
     AddPattern(String, String),
     Unknown,
+}
+
+/// Config collects the data needed for the ddir command and acts as a
+/// parsing result.
+pub struct Config {
+    path: Option<String>,
+    description: Option<String>,
+    help: bool,
+    add_description: bool,
+    add_pattern: bool,
+}
+
+/// An error detected in command line arguments/flags.
+pub struct ConfigError {
+    message: String,
 }
 
 /// parse parses a list of command line arguments and returns an enum
@@ -41,6 +59,32 @@ pub fn parse(args: &Vec<String>) -> InvokedTo {
             _ => InvokedTo::Unknown,
         },
         _ => InvokedTo::Unknown,
+    }
+}
+
+impl Config {
+    fn wrap(path: Option<String>, desc: Option<String>, help: bool, d: bool, p: bool) -> Result {
+        Ok(Config {
+            path: match path {
+                Some(s) => Some(s.to_string()),
+                None => None,
+            },
+            description: match desc {
+                Some(s) => Some(s.to_string()),
+                None => None,
+            },
+            help,
+            add_description: d,
+            add_pattern: p,
+        })
+    }
+}
+
+impl ConfigError {
+    fn wrap(message: &str) -> Result {
+        Err(ConfigError {
+            message: message.to_string(),
+        })
     }
 }
 
