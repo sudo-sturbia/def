@@ -18,7 +18,6 @@ const HELP_FLAG: &str = "-help";
 #[derive(Debug, PartialEq)]
 pub enum InvokedTo {
     Help,
-    DescribeWorkingDir,
     DescribeDirAtPath(String),
     AddDescription(String, String),
     AddPattern(String, String),
@@ -31,7 +30,7 @@ pub enum InvokedTo {
 /// arguments needed to do it.
 pub fn parse(args: &Vec<String>) -> InvokedTo {
     match args.len() {
-        1 => InvokedTo::DescribeWorkingDir,
+        1 => InvokedTo::Help,
         2 => match args[1].as_str() {
             HELP_FLAG => InvokedTo::Help,
             _ => InvokedTo::DescribeDirAtPath(args[1].clone()),
@@ -52,8 +51,8 @@ mod tests {
     #[test]
     fn parse_test() {
         for (args, res) in [
-            (vec!["ddir".to_string()], InvokedTo::DescribeWorkingDir),
-            (vec!["./renamed".to_string()], InvokedTo::DescribeWorkingDir),
+            (vec!["ddir".to_string()], InvokedTo::Help),
+            (vec!["./renamed".to_string()], InvokedTo::Help),
             (
                 vec!["ddir".to_string(), "-help".to_string()],
                 InvokedTo::Help,
