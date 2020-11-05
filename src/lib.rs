@@ -86,20 +86,26 @@ impl Describer {
         }
     }
 
-    // Add a description to the descriptions map.
+    /// Add a description to the descriptions map.
     pub fn add_description(&mut self, path: &str, desc: &str) {
         self.descriptions.insert(path.to_string(), desc.to_string());
     }
 
-    // Add a pattern to the patterns map.
+    /// Add a pattern to the patterns map.
     pub fn add_pattern(&mut self, path: &str, desc: &str) {
         self.patterns.insert(path.to_string(), desc.to_string());
     }
 
-    // Return a string JSON representation of this Describer. This is
-    // subsequently written to a file to be re-loaded on next run.
+    /// Return a string JSON representation of this Describer. This is
+    /// subsequently written to a file to be re-loaded on next run.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
+    }
+}
+
+impl Default for Describer {
+    fn default() -> Describer {
+        Describer::new()
     }
 }
 
