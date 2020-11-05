@@ -14,6 +14,8 @@ use errors::Handle;
 static CONFIG_FILE: &str = ".config/ddir/config.json";
 static CONFIG_DIR: &str = ".config/ddir";
 
+const JSON_PRETTY: bool = true; // Use pretty JSON
+
 fn main() {
     match command::parse(&env::args().collect::<Vec<String>>()) {
         Ok(config) => {
@@ -56,7 +58,7 @@ fn add_description(config: &Config, description: &str) {
     fs::write(
         &full_path(CONFIG_FILE),
         describer
-            .to_json()
+            .to_json(JSON_PRETTY)
             .extract_or_exit("failed to create config"),
     )
     .extract_or_exit("failed to write config to file")

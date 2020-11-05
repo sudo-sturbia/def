@@ -137,8 +137,16 @@ impl Describer {
 
     /// Return a string JSON representation of this Describer. This is
     /// subsequently written to a file to be re-loaded on next run.
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string(self)
+    ///
+    /// # Arguments
+    ///
+    /// * `pretty` - If true, return a "pretty" JSON string.
+    pub fn to_json(&self, pretty: bool) -> Result<String, serde_json::Error> {
+        if pretty {
+            serde_json::to_string_pretty(self)
+        } else {
+            serde_json::to_string(self)
+        }
     }
 }
 
@@ -206,7 +214,7 @@ mod tests {
         d.add_description("path/to/directory", "This is an empty directory.");
         d.add_pattern("parent/directory", "* is a child of parent/directory.");
         assert_eq!(
-            d.to_json().unwrap(),
+            d.to_json(false).unwrap(),
             format!(
                 "{}{}{}{}",
                 "{\"descriptions\":",
