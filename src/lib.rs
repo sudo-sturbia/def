@@ -1,3 +1,7 @@
+//! ddir is library of ddir command line tool. It provides the `Describer`
+//! which used is to map string descriptions to directory paths and retrieve
+//! them when needed.
+
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -16,13 +20,48 @@ const DIRECTORY_PLACEHOLDER: char = '*';
 /// describing the directory. When describe is called this will be retrieved
 /// as is.
 /// - Pattern description: A string mapped to a directory's path describing
-/// the directory's children. In patterns, "*" is interpreted as a place holder
-/// for working directory's name, and are replaced by the name when retreived.
+/// a child of the directory. When description of a child is wanted, the pattern
+/// is retrieved. In patterns, "*" is interpreted as a place holder for working
+/// directory's name, and are replaced by the name when retreived.
+///
+/// If a string can be described using both a pattern and a specific description,
+/// the specific description will be favoured.
 ///
 /// # Examples
 ///
 /// ```
+/// # use ddir::Describer;
+/// #
+/// # fn main() {
+/// // Create a mutable describer.
+/// let mut describer = Describer::new();
+///
+/// // Map a description to a given path.
+/// describer.add_description("path/to/directory", "This is an empty directory.");
+///
+/// // Map a pattern to a given path. The pattern applies to the path's
+/// // children. "*" works as a placeholder and will be replaced by the
+/// // child's name.
+/// describer.add_pattern("parent/directory", "* is a child of parent/directory.");
+///
+/// // The description is retrieved as is.
+/// assert_eq!(
+///     describer.describe("path/to/directory"),
+///     Some("This is an empty directory.".to_string())
+/// );
+///
+/// // "*" is replaced with "test".
+/// assert_eq!(
+///     describer.describe("parent/directory/test"),
+///     Some("test is a child of parent/directory.".to_string())
+/// );
+///
+/// // Despite having a pattern mapped to it, the pattern only applies to
+/// // its children.
+/// assert_eq!(describer.describe("parent/directory"), None);
+/// # }
 /// ```
+///
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Describer {
     descriptions: HashMap<String, String>,
