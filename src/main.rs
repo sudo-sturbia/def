@@ -34,7 +34,36 @@ fn main() {
 
 /// usage prints a help message to stderr and exits with exit code 1.
 fn usage() {
-    eprintln!("");
+    eprintln!(
+        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
+        "ddir keeps track of directory descriptions for you.\n",
+        "\n",
+        "Usage\n",
+        "\n",
+        "  ddir <path>                         Print description of dir at path.\n",
+        "  ddir -add <path> <description>      Add a description for dir at path.\n",
+        "  ddir -pattern <path> <description>  Add a pattern to describe children of dir. A\n",
+        "                                      wildcard in the pattern will be replaced with\n",
+        "                                      the child directory's name.\n",
+        "\n",
+        "Descriptions\n",
+        "\n",
+        "  To describe a directory use -add flag which simply maps a description to a path.\n",
+        "\n",
+        "  The -pattern flag is used to describe all children of a directory using a common\n",
+        "  trait. When -pattern is used, a description is mapped to a dir, but is used only\n",
+        "  to describe its children. If a wildcard \" * \" exists in the pattern, it will be\n",
+        "  replaced by the child's name.\n",
+        "\n",
+        "  For example:\n",
+        "\n",
+        "    $ ddir -pattern \"/dir\" \"* is a child of /dir\"\n",
+        "    $ ddir \"/dir/temp\"\n",
+        "    /dir/temp: temp is a child of /dir\n",
+        "\n",
+        "Descriptions and patterns are kept in ~/.config/ddir/config.json and can be added to\n",
+        "or adjusted manually.",
+    );
     process::exit(1);
 }
 
