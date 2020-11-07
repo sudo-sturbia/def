@@ -19,6 +19,9 @@ const JSON_PRETTY: bool = true; // Use pretty JSON
 fn main() {
     match command::parse(&env::args().collect::<Vec<String>>()) {
         Ok(config) => {
+            if config.short_help {
+                help()
+            }
             if config.help {
                 usage()
             }
@@ -30,6 +33,17 @@ fn main() {
         }
         Err(e) => eprintln!("{}: {}", "Err".red(), e.message),
     }
+}
+
+/// help prints a short help message to stderr and exits with code 1.
+fn help() {
+    eprintln!(
+        "{}{}{}",
+        "Usage\n",
+        "  ddir [ <path> | -add <path> <description> | -pattern <path> <description> ]\n",
+        "Try \"ddir -help\" for more details.",
+    );
+    process::exit(1);
 }
 
 /// usage prints a help message to stderr and exits with exit code 1.

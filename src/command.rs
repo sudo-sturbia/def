@@ -20,6 +20,7 @@ type Result = std::result::Result<Config, ConfigError>;
 /// a new enum defining it should be added here.
 #[derive(Debug, PartialEq)]
 enum InvokedTo {
+    ShortHelp,
     Help,
     DescribeDirAtPath(String),
     AddDescription(String, String),
@@ -34,6 +35,7 @@ pub struct Config {
     pub path: Option<String>,
     pub description: Option<String>,
     pub help: bool,
+    pub short_help: bool,
     pub add_description: bool,
     pub add_pattern: bool,
 }
@@ -48,10 +50,13 @@ pub struct ConfigError {
 /// extracted data or a Config error if arguments don't match a defined pattern.
 pub fn parse(args: &[String]) -> Result {
     match invocation_pattern(args) {
-        InvokedTo::Help => Config::wrap(None, None, true, false, false),
-        InvokedTo::DescribeDirAtPath(p) => Config::wrap(Some(p), None, false, false, false),
-        InvokedTo::AddDescription(p, d) => Config::wrap(Some(p), Some(d), false, true, false),
-        InvokedTo::AddPattern(p, d) => Config::wrap(Some(p), Some(d), false, false, true),
+        InvokedTo::ShortHelp => Config::wrap(None, None, false, true, false, false),
+        InvokedTo::Help => Config::wrap(None, None, true, false, false, false),
+        InvokedTo::DescribeDirAtPath(p) => Config::wrap(Some(p), None, false, false, false, false),
+        InvokedTo::AddDescription(p, d) => {
+            Config::wrap(Some(p), Some(d), false, false, true, false)
+        }
+        InvokedTo::AddPattern(p, d) => Config::wrap(Some(p), Some(d), false, false, false, true),
         InvokedTo::Unknown => ConfigError::wrap("invalid argument list"),
     }
 }
@@ -62,7 +67,7 @@ pub fn parse(args: &[String]) -> Result {
 /// needed to do it.
 fn invocation_pattern(args: &[String]) -> InvokedTo {
     match args.len() {
-        1 => InvokedTo::Help,
+        1 => InvokedTo::ShortHelp,
         2 => match args[1].as_str() {
             HELP_FLAG => InvokedTo::Help,
             _ => InvokedTo::DescribeDirAtPath(args[1].clone()),
@@ -77,7 +82,14 @@ fn invocation_pattern(args: &[String]) -> InvokedTo {
 }
 
 impl Config {
-    fn wrap(path: Option<String>, desc: Option<String>, help: bool, d: bool, p: bool) -> Result {
+    fn wrap(
+        path: Option<String>,
+        desc: Option<String>,
+        help: bool,
+        short_help: bool,
+        d: bool,
+        p: bool,
+    ) -> Result {
         Ok(Config {
             path: match path {
                 Some(s) => Some(s),
@@ -88,6 +100,7 @@ impl Config {
                 None => None,
             },
             help,
+            short_help,
             add_description: d,
             add_pattern: p,
         })
@@ -111,19 +124,26 @@ mod tests {
         for (args, config) in [
             (
                 vec!["ddir".to_string()],
-                Config::wrap(None, None, true, false, false),
+                Config::wrap(None, None, false, true, false, false),
             ),
             (
                 vec!["./renamed".to_string()],
-                Config::wrap(None, None, true, false, false),
+                Config::wrap(None, None, false, true, false, false),
             ),
             (
                 vec!["ddir".to_string(), "-help".to_string()],
-                Config::wrap(None, None, true, false, false),
+                Config::wrap(None, None, true, false, false, false),
             ),
             (
                 vec!["ddir".to_string(), "/path/to/dir".to_string()],
-                Config::wrap(Some("/path/to/dir".to_string()), None, false, false, false),
+                Config::wrap(
+                    Some("/path/to/dir".to_string()),
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                ),
             ),
             (
                 vec![
@@ -135,6 +155,7 @@ mod tests {
                 Config::wrap(
                     Some("/path".to_string()),
                     Some("description".to_string()),
+                    false,
                     false,
                     true,
                     false,
@@ -150,6 +171,7 @@ mod tests {
                 Config::wrap(
                     Some("/path".to_string()),
                     Some("description".to_string()),
+                    false,
                     false,
                     false,
                     true,
@@ -193,8 +215,8 @@ mod tests {
     #[test]
     fn invocation_pattern_test() {
         for (args, res) in [
-            (vec!["ddir".to_string()], InvokedTo::Help),
-            (vec!["./renamed".to_string()], InvokedTo::Help),
+            (vec!["ddir".to_string()], InvokedTo::ShortHelp),
+            (vec!["./renamed".to_string()], InvokedTo::ShortHelp),
             (
                 vec!["ddir".to_string(), "-help".to_string()],
                 InvokedTo::Help,
