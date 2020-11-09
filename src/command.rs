@@ -1,7 +1,7 @@
-// Available command line flags.
-const ADD_FLAG: &str = "-add";
-const PATTERN_FLAG: &str = "-pattern";
-const HELP_FLAG: &str = "-help";
+// def's sub-commands.
+const ADD_COMMAND: &str = "add";
+const PATTERN_COMMAND: &str = "pattern";
+const HELP_COMMAND: &str = "help";
 
 /// InvokedTo defines different things the `def` command can do, such as:
 /// print a help message, describe directory, add a description, etc. Only
@@ -10,7 +10,7 @@ const HELP_FLAG: &str = "-help";
 /// also contains the parameters needed to perform the operation, which should
 /// be extracted from the command line argumenst.
 ///
-/// For example: `def -add path describition` is parsed to
+/// For example: `def add path describition` is parsed to
 /// `InvokedTo::AddDescription("path", "description")`.
 ///
 /// If new functionality is added to the command (such as a new flag), then
@@ -32,12 +32,12 @@ pub fn parse(args: &[String]) -> InvokedTo {
     match args.len() {
         1 => InvokedTo::ShortHelp,
         2 => match args[1].as_str() {
-            HELP_FLAG => InvokedTo::Help,
+            HELP_COMMAND => InvokedTo::Help,
             _ => InvokedTo::DescribePath(args[1].clone()),
         },
         4 => match args[1].as_str() {
-            ADD_FLAG => InvokedTo::AddDescription(args[2].clone(), args[3].clone()),
-            PATTERN_FLAG => InvokedTo::AddPattern(args[2].clone(), args[3].clone()),
+            ADD_COMMAND => InvokedTo::AddDescription(args[2].clone(), args[3].clone()),
+            PATTERN_COMMAND => InvokedTo::AddPattern(args[2].clone(), args[3].clone()),
             _ => InvokedTo::Unknown,
         },
         _ => InvokedTo::Unknown,
@@ -53,10 +53,7 @@ mod tests {
         for (args, res) in [
             (vec!["def".to_string()], InvokedTo::ShortHelp),
             (vec!["./renamed".to_string()], InvokedTo::ShortHelp),
-            (
-                vec!["def".to_string(), "-help".to_string()],
-                InvokedTo::Help,
-            ),
+            (vec!["def".to_string(), "help".to_string()], InvokedTo::Help),
             (
                 vec!["def".to_string(), "/path/to/dir".to_string()],
                 InvokedTo::DescribePath("/path/to/dir".to_string()),
@@ -64,7 +61,7 @@ mod tests {
             (
                 vec![
                     "def".to_string(),
-                    "-add".to_string(),
+                    "add".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
                 ],
@@ -73,7 +70,7 @@ mod tests {
             (
                 vec![
                     "def".to_string(),
-                    "-pattern".to_string(),
+                    "pattern".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
                 ],
@@ -87,7 +84,7 @@ mod tests {
             (
                 vec![
                     "def".to_string(),
-                    "-add".to_string(),
+                    "add".to_string(),
                     "path".to_string(),
                     "another".to_string(),
                     "another".to_string(),
