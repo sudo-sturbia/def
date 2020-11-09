@@ -29,11 +29,8 @@ const NAME_PLACEHOLDER: char = '*';
 /// # Examples
 ///
 /// ```
-/// # use def::Describer;
-/// #
-/// # fn main() {
 /// // Create a mutable describer.
-/// let mut describer = Describer::new();
+/// let mut describer = def::Describer::new();
 ///
 /// // Map a description to a given path.
 /// describer.add_description("path/to/directory", "This is an empty directory.");
@@ -58,7 +55,6 @@ const NAME_PLACEHOLDER: char = '*';
 /// // Despite having a pattern mapped to it, the pattern only applies to
 /// // its children.
 /// assert_eq!(describer.describe("parent/directory"), None);
-/// # }
 /// ```
 ///
 #[derive(Deserialize, Serialize, Debug)]
