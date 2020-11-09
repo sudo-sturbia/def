@@ -6,14 +6,14 @@ const HELP_FLAG: &str = "-help";
 /// Result of command line parsing.
 type Result = std::result::Result<Config, ConfigError>;
 
-/// InvokedTo defines different things the `ddir` command can do, such as:
+/// InvokedTo defines different things the `def` command can do, such as:
 /// print a help message, describe current working directory, etc. Only
 /// one of these things can be done at a time depending on how the command
 /// is used. In addition to describing what the command can do, each enum
 /// also contains the parameters needed to perform the operation, which should
 /// be extracted from the command line argumenst.
 ///
-/// For example: `ddir -add path describition` is parsed to
+/// For example: `def -add path describition` is parsed to
 /// `InvokedTo::AddDescription("path", "description")`.
 ///
 /// If new functionality is added to the command (such as a new flag), then
@@ -22,13 +22,13 @@ type Result = std::result::Result<Config, ConfigError>;
 enum InvokedTo {
     ShortHelp,
     Help,
-    DescribeDirAtPath(String),
+    DescribePath(String),
     AddDescription(String, String),
     AddPattern(String, String),
     Unknown,
 }
 
-/// Config collects the data needed for the ddir command and acts as a
+/// Config collects the data needed for the def command and acts as a
 /// parsing result.
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -52,7 +52,7 @@ pub fn parse(args: &[String]) -> Result {
     match invocation_pattern(args) {
         InvokedTo::ShortHelp => Config::wrap(None, None, false, true, false, false),
         InvokedTo::Help => Config::wrap(None, None, true, false, false, false),
-        InvokedTo::DescribeDirAtPath(p) => Config::wrap(Some(p), None, false, false, false, false),
+        InvokedTo::DescribePath(p) => Config::wrap(Some(p), None, false, false, false, false),
         InvokedTo::AddDescription(p, d) => {
             Config::wrap(Some(p), Some(d), false, false, true, false)
         }
@@ -63,14 +63,14 @@ pub fn parse(args: &[String]) -> Result {
 
 /// invocation_pattern parses a list of command line arguments and returns
 /// an enum describing what the command should achieve (print a help message,
-/// print description of dir, add description, etc.), and a list of arguments
-/// needed to do it.
+/// print description, add description, etc.), and a list of arguments needed
+/// to do it.
 fn invocation_pattern(args: &[String]) -> InvokedTo {
     match args.len() {
         1 => InvokedTo::ShortHelp,
         2 => match args[1].as_str() {
             HELP_FLAG => InvokedTo::Help,
-            _ => InvokedTo::DescribeDirAtPath(args[1].clone()),
+            _ => InvokedTo::DescribePath(args[1].clone()),
         },
         4 => match args[1].as_str() {
             ADD_FLAG => InvokedTo::AddDescription(args[2].clone(), args[3].clone()),
@@ -123,7 +123,7 @@ mod tests {
     fn parse_test() {
         for (args, config) in [
             (
-                vec!["ddir".to_string()],
+                vec!["def".to_string()],
                 Config::wrap(None, None, false, true, false, false),
             ),
             (
@@ -131,11 +131,11 @@ mod tests {
                 Config::wrap(None, None, false, true, false, false),
             ),
             (
-                vec!["ddir".to_string(), "-help".to_string()],
+                vec!["def".to_string(), "-help".to_string()],
                 Config::wrap(None, None, true, false, false, false),
             ),
             (
-                vec!["ddir".to_string(), "/path/to/dir".to_string()],
+                vec!["def".to_string(), "/path/to/dir".to_string()],
                 Config::wrap(
                     Some("/path/to/dir".to_string()),
                     None,
@@ -147,7 +147,7 @@ mod tests {
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-add".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
@@ -163,7 +163,7 @@ mod tests {
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-pattern".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
@@ -179,16 +179,12 @@ mod tests {
             ),
             (vec![], ConfigError::wrap("invalid argument list")),
             (
-                vec![
-                    "ddir".to_string(),
-                    "path".to_string(),
-                    "another".to_string(),
-                ],
+                vec!["def".to_string(), "path".to_string(), "another".to_string()],
                 ConfigError::wrap("invalid argument list"),
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-add".to_string(),
                     "path".to_string(),
                     "another".to_string(),
@@ -198,7 +194,7 @@ mod tests {
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-unkown".to_string(),
                     "path".to_string(),
                     "description".to_string(),
@@ -215,19 +211,19 @@ mod tests {
     #[test]
     fn invocation_pattern_test() {
         for (args, res) in [
-            (vec!["ddir".to_string()], InvokedTo::ShortHelp),
+            (vec!["def".to_string()], InvokedTo::ShortHelp),
             (vec!["./renamed".to_string()], InvokedTo::ShortHelp),
             (
-                vec!["ddir".to_string(), "-help".to_string()],
+                vec!["def".to_string(), "-help".to_string()],
                 InvokedTo::Help,
             ),
             (
-                vec!["ddir".to_string(), "/path/to/dir".to_string()],
-                InvokedTo::DescribeDirAtPath("/path/to/dir".to_string()),
+                vec!["def".to_string(), "/path/to/dir".to_string()],
+                InvokedTo::DescribePath("/path/to/dir".to_string()),
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-add".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
@@ -236,7 +232,7 @@ mod tests {
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-pattern".to_string(),
                     "/path".to_string(),
                     "description".to_string(),
@@ -245,16 +241,12 @@ mod tests {
             ),
             (vec![], InvokedTo::Unknown),
             (
-                vec![
-                    "ddir".to_string(),
-                    "path".to_string(),
-                    "another".to_string(),
-                ],
+                vec!["def".to_string(), "path".to_string(), "another".to_string()],
                 InvokedTo::Unknown,
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-add".to_string(),
                     "path".to_string(),
                     "another".to_string(),
@@ -264,7 +256,7 @@ mod tests {
             ),
             (
                 vec![
-                    "ddir".to_string(),
+                    "def".to_string(),
                     "-unkown".to_string(),
                     "path".to_string(),
                     "description".to_string(),

@@ -8,7 +8,7 @@ use std::process;
 
 use colored::*;
 use command::Config;
-use ddir::Describer;
+use def::Describer;
 use errors::Handle;
 
 const JSON_PRETTY: bool = true; // Use pretty JSON
@@ -37,8 +37,8 @@ fn help() {
     eprintln!(
         "{}{}{}",
         "Usage\n",
-        "  ddir [ <path> | -add <path> <description> | -pattern <path> <description> ]\n",
-        "Try \"ddir -help\" for more details.",
+        "  def [ <path> | -add <path> <description> | -pattern <path> <description> ]\n",
+        "Try \"def -help\" for more details.",
     );
     process::exit(1);
 }
@@ -47,15 +47,15 @@ fn help() {
 fn usage() {
     eprintln!(
         "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-        "ddir keeps track of directory descriptions for you.\n",
+        "def keeps track of directory descriptions for you.\n",
         "\n",
         "Usage\n",
         "\n",
-        "  ddir <path>                         Print description of dir at path.\n",
-        "  ddir -add <path> <description>      Add a description for dir at path.\n",
-        "  ddir -pattern <path> <description>  Add a pattern to describe children of dir. A\n",
-        "                                      wildcard in the pattern will be replaced with\n",
-        "                                      the child directory's name.\n",
+        "  def <path>                         Print description of dir at path.\n",
+        "  def -add <path> <description>      Add a description for dir at path.\n",
+        "  def -pattern <path> <description>  Add a pattern to describe children of dir. A\n",
+        "                                     wildcard in the pattern will be replaced with\n",
+        "                                     the child directory's name.\n",
         "\n",
         "Descriptions\n",
         "\n",
@@ -68,11 +68,11 @@ fn usage() {
         "\n",
         "  For example:\n",
         "\n",
-        "    $ ddir -pattern \"/dir\" \"* is a child of /dir\"\n",
-        "    $ ddir \"/dir/temp\"\n",
+        "    $ def -pattern \"/dir\" \"* is a child of /dir\"\n",
+        "    $ def \"/dir/temp\"\n",
         "    /dir/temp: temp is a child of /dir\n",
         "\n",
-        "Descriptions and patterns are kept in ~/.config/ddir/config.json and can be added to\n",
+        "Descriptions and patterns are kept in ~/.config/def/config.json and can be added to\n",
         "or adjusted manually.",
     );
     process::exit(1);
@@ -121,7 +121,7 @@ fn print_description(config: &Config) {
 
 /// get_describer loads JSON from config_file, creates a describer and
 /// returns it. Exits on error.
-fn get_describer() -> ddir::Describer {
+fn get_describer() -> def::Describer {
     Describer::new_from_json(
         &fs::read_to_string(&config_file()).extract_or_exit("failed to read config"),
     )
@@ -131,7 +131,7 @@ fn get_describer() -> ddir::Describer {
 /// config_file returns path to configuration file.
 fn config_file() -> String {
     format!(
-        "{}/.config/ddir/config.json",
+        "{}/.config/def/config.json",
         env::var("HOME").extract_or_exit("failed to get $HOME"),
     )
 }
@@ -139,7 +139,7 @@ fn config_file() -> String {
 /// config_dir returns path to directory containing configuration file.
 fn config_dir() -> String {
     format!(
-        "{}/.config/ddir",
+        "{}/.config/def",
         env::var("HOME").extract_or_exit("failed to get $HOME"),
     )
 }
