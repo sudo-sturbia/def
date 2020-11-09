@@ -1,6 +1,6 @@
-//! ddir is library of ddir command line tool. It provides the `Describer`
-//! which used is to map string descriptions to directory paths and retrieve
-//! them when needed.
+//! def is a library backing def command line tool. It mainly provides `Describer`
+//! structwhich is used to map string descriptions to paths and retrieve them when
+//! needed.
 
 use std::collections::HashMap;
 
@@ -9,20 +9,19 @@ use serde::{Deserialize, Serialize};
 /// Directory seperator. Used to split a string.
 const SEPERATOR: char = '/';
 
-/// A place holder in patterns. Replaced with working directory's name.
-const DIRECTORY_PLACEHOLDER: char = '*';
+/// A place holder in patterns. Replaced with a name.
+const NAME_PLACEHOLDER: char = '*';
 
-/// Describer holds descriptions of directories.
+/// Describer holds descriptions of files and directories.
 ///
 /// # Types of Descriptions
 ///
-/// - Specific directory description: A string mapped to a directory's path
-/// describing the directory. When describe is called this will be retrieved
-/// as is.
-/// - Pattern description: A string mapped to a directory's path describing
-/// a child of the directory. When description of a child is wanted, the pattern
-/// is retrieved. In patterns, "*" is interpreted as a place holder for working
-/// directory's name, and are replaced by the name when retreived.
+/// - Specific description: A string mapped to a path describing a file or directory.
+/// When describe is called this will be retrieved as is.
+/// - Pattern description: A string mapped to a directory's path describing a child
+/// of the directory. When description of a child is wanted, the pattern is retrieved.
+/// In patterns, a wildcard is interpreted as a place holder for child's name, and are
+/// replaced by the name when retreived.
 ///
 /// If a string can be described using both a pattern and a specific description,
 /// the specific description will be favoured.
@@ -30,11 +29,8 @@ const DIRECTORY_PLACEHOLDER: char = '*';
 /// # Examples
 ///
 /// ```
-/// # use ddir::Describer;
-/// #
-/// # fn main() {
 /// // Create a mutable describer.
-/// let mut describer = Describer::new();
+/// let mut describer = def::Describer::new();
 ///
 /// // Map a description to a given path.
 /// describer.add_description("path/to/directory", "This is an empty directory.");
@@ -59,7 +55,6 @@ const DIRECTORY_PLACEHOLDER: char = '*';
 /// // Despite having a pattern mapped to it, the pattern only applies to
 /// // its children.
 /// assert_eq!(describer.describe("parent/directory"), None);
-/// # }
 /// ```
 ///
 #[derive(Deserialize, Serialize, Debug)]
@@ -81,7 +76,7 @@ impl Describer {
     ///
     /// # Arguments
     ///
-    /// * `d` - A map of directory descriptions.
+    /// * `d` - A map of descriptions.
     /// * `p` - A map of patterns.
     pub fn new_with(d: HashMap<String, String>, p: HashMap<String, String>) -> Describer {
         Describer {
@@ -104,22 +99,22 @@ impl Describer {
     /// Return a description of the given path or None if no description
     /// exists. The descriptions map is checked for a description first,
     /// if none is found, then the patterns map is checked.
-    pub fn describe(&self, directory: &str) -> Option<String> {
-        match self.descriptions.get(directory) {
+    pub fn describe(&self, path: &str) -> Option<String> {
+        match self.descriptions.get(path) {
             Some(d) => Some(d.clone()),
-            None => self.describe_using_pattern(directory),
+            None => self.describe_using_pattern(path),
         }
     }
 
     /// Check patterns map for a description. If one exists, return it with
     /// all place holders replaced, otherwise return None.
-    fn describe_using_pattern(&self, directory: &str) -> Option<String> {
-        let v: Vec<&str> = directory.rsplitn(2, SEPERATOR).collect();
-        if v.len() != 2 {
+    fn describe_using_pattern(&self, path: &str) -> Option<String> {
+        let parent: Vec<&str> = path.rsplitn(2, SEPERATOR).collect();
+        if parent.len() != 2 {
             None
         } else {
-            match self.patterns.get(v[1]) {
-                Some(p) => Some(p.replace(DIRECTORY_PLACEHOLDER, v[0])),
+            match self.patterns.get(parent[1]) {
+                Some(p) => Some(p.replace(NAME_PLACEHOLDER, parent[0])),
                 None => None,
             }
         }
