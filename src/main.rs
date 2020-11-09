@@ -89,10 +89,11 @@ fn add_description(config: &Config, description: &str) {
         Describer::new()
     };
 
+    let path = absolute_path(config.path.as_ref().unwrap()); // Safe to unwrap.
     if config.add_description {
-        describer.add_description(config.path.as_ref().unwrap(), description);
+        describer.add_description(&path, description);
     } else if config.add_pattern {
-        describer.add_pattern(config.path.as_ref().unwrap(), description);
+        describer.add_pattern(&path, description);
     }
 
     fs::write(
@@ -109,7 +110,7 @@ fn add_description(config: &Config, description: &str) {
 /// exists, an error message is printed.
 fn print_description(config: &Config) {
     let describer = get_describer();
-    let path = config.path.as_ref().unwrap(); // Guaranteed to have a value.
+    let path = absolute_path(config.path.as_ref().unwrap()); // Safe to unwrap.
     println!(
         "{}",
         match describer.describe(&path) {
@@ -142,4 +143,19 @@ fn config_dir() -> String {
         "{}/.config/def",
         env::var("HOME").extract_or_exit("failed to get $HOME"),
     )
+}
+
+/// absolute_path takes a path and returns its absolute representation.
+/// Exits on failure (if path doesn't exist).
+fn absolute_path(path: &str) -> String {
+    match fs::canonicalize(path)
+        .extract_or_exit("failed to get absolute path")
+        .to_str()
+    {
+        Some(p) => p.to_string(),
+        None => {
+            eprintln!("{}: {}", "Err".red(), "path contains invalid chars");
+            process::exit(1);
+        }
+    }
 }
