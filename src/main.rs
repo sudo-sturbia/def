@@ -7,7 +7,7 @@ use std::path::Path;
 use std::process;
 
 use colored::*;
-use command::Config;
+use command::InvokedTo;
 use def::Describer;
 use errors::Handle;
 
@@ -15,20 +15,12 @@ const JSON_PRETTY: bool = true; // Use pretty JSON
 
 fn main() {
     match command::parse(&env::args().collect::<Vec<String>>()) {
-        Ok(config) => {
-            if config.short_help {
-                help()
-            }
-            if config.help {
-                usage()
-            }
-
-            match &config.description {
-                Some(description) => add_description(&config, &description),
-                None => print_description(&config),
-            }
-        }
-        Err(e) => eprintln!("{}: {}", "Err".red(), e.message),
+        InvokedTo::ShortHelp => help(),
+        InvokedTo::Help => usage(),
+        InvokedTo::DescribePath(p) => print_description(&p),
+        InvokedTo::AddDescription(p, d) => add_description(&p, &d, false),
+        InvokedTo::AddPattern(p, d) => add_description(&p, &d, true),
+        InvokedTo::Unknown => eprintln!("{}: {}", "Err".red(), "invalid argument list"),
     }
 }
 
@@ -80,9 +72,9 @@ fn usage() {
 }
 
 /// add_description creates a describer, either from config_file if it exists,
-/// or empty otherwise. Maps the given description to config.path, and (re)writes
-/// the describer to config_file.
-fn add_description(config: &Config, description: &str) {
+/// or empty otherwise. Maps the given description to path, and (re)writes the
+/// describer to config_file.
+fn add_description(path: &str, description: &str, pattern: bool) {
     let mut describer = if Path::new(&config_file()).exists() {
         get_describer()
     } else {
@@ -90,11 +82,10 @@ fn add_description(config: &Config, description: &str) {
         Describer::new()
     };
 
-    let path = absolute_path(config.path.as_ref().unwrap()); // Safe to unwrap.
-    if config.add_description {
-        describer.add_description(&path, description);
-    } else if config.add_pattern {
-        describer.add_pattern(&path, description);
+    if pattern {
+        describer.add_pattern(&absolute_path(path), description);
+    } else {
+        describer.add_description(&absolute_path(path), description);
     }
 
     fs::write(
@@ -107,11 +98,11 @@ fn add_description(config: &Config, description: &str) {
 }
 
 /// print_description creates a describer using config_file, and prints
-/// a description of the path specified in config.path. If no description
-/// exists, an error message is printed.
-fn print_description(config: &Config) {
+/// a description of the specified path. If no description exists, an error
+/// message is printed.
+fn print_description(path: &str) {
     let describer = get_describer();
-    let path = absolute_path(config.path.as_ref().unwrap()); // Safe to unwrap.
+    let path = absolute_path(path);
     println!(
         "{}",
         match describer.describe(&path) {
