@@ -1,8 +1,15 @@
 [package]
 name = "def"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Zyad A. Ali <zyad.ali.me@gmail.com>"]
 edition = "2018"
+description = "A tool that keeps track of file and directory descriptions."
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/sudo-sturbia/def"
+repository = "https://github.com/sudo-sturbia/def"
+keywords = ["cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
